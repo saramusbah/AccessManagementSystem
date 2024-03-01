@@ -1,12 +1,12 @@
 ﻿using AccessManagementSystem.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace AccessManagementSystem.Data.Context
 {
     public class AccessManagementSystemContext : IdentityDbContext<User>
     {
-        public AccessManagementSystemContext(DbContextOptions<AccessManagementSystemContext> options): base(options)
+        public AccessManagementSystemContext(DbContextOptions<AccessManagementSystemContext> options) : base(options)
         {
         }
 

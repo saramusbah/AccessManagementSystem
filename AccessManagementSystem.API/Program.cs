@@ -56,7 +56,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
-    options.Password.RequiredLength = 4;
+    options.Password.RequiredLength = 6;
     options.Password.RequireLowercase = false;
     options.Password.RequireUppercase = false;
     options.Password.RequireDigit = false;
@@ -109,7 +109,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(config =>
     {
-        config.SwaggerEndpoint("../swagger/v1/swagger.json", "Access Management System API v1");
+        config.SwaggerEndpoint("../swagger/v1/swagger.json", "AccessManagementSystem API v1");
     });
 }
 
@@ -122,10 +122,10 @@ using (var scope = app.Services.CreateScope())
 
     await SeedData.Initialize(userManager, roleManager, configuration);
 }
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
 
 app.MapControllers();
 
