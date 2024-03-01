@@ -74,6 +74,10 @@ namespace AccessManagementSystem.Domain.Models
 
                 case Models.ErrorCode.NotRegisteredUser:
                     return "This user is not registered";
+
+                case Models.ErrorCode.NotRegisteredDoor:
+                    return "This door is not registered";
+
                 default:
                     throw new NotImplementedException();
             }

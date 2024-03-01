@@ -8,6 +8,7 @@ namespace AccessManagementSystem.Domain.Models
         ExisitingAccountError,
         RequiredEmailError,
         NotRegisteredUser,
-        NotRegisteredRole
+        NotRegisteredRole,
+        NotRegisteredDoor
     }
 }

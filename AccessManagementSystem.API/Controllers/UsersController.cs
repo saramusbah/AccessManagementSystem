@@ -13,13 +13,13 @@ namespace AccessManagementSystem.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UserController : ControllerBase
+    public class UsersController : ControllerBase
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IdentityConfig _identityConfig;
 
-        public UserController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IdentityConfig identityConfig)
+        public UsersController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IdentityConfig identityConfig)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -90,9 +90,9 @@ namespace AccessManagementSystem.API.Controllers
                 return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredUser));
             }
 
-            var roleExist = await _roleManager.RoleExistsAsync(model.Role);
+            var roleExists = await _roleManager.RoleExistsAsync(model.Role);
 
-            if (!roleExist)
+            if (!roleExists)
             {
                 return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredRole));
             }

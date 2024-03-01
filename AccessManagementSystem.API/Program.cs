@@ -1,5 +1,7 @@
 using AccessManagementSystem.API;
 using AccessManagementSystem.Data.Context;
+using AccessManagementSystem.Data.Services;
+using AccessManagementSystem.Domain.Contracts;
 using AccessManagementSystem.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -15,6 +17,8 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<IDoorService, DoorService>();
+
 builder.Services.Configure<IdentityConfig>(builder.Configuration.GetSection("IdentitySettings"));
 builder.Services.AddSingleton(provider => provider.GetRequiredService<IOptions<IdentityConfig>>().Value);
 
