@@ -4,6 +4,7 @@ using AccessManagementSystem.Domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace AccessManagementSystem.API.Controllers
 {
@@ -15,12 +16,14 @@ namespace AccessManagementSystem.API.Controllers
         private readonly IDoorService _doorService;
         private readonly IAccessService _accessService;
         private readonly UserManager<User> _userManager;
+        private readonly ILogger<DoorAccessController> _logger;
 
-        public DoorAccessController(IDoorService doorService, IAccessService accessService, UserManager<User> userManager)
+        public DoorAccessController(IDoorService doorService, IAccessService accessService, UserManager<User> userManager, ILogger<DoorAccessController> logger)
         {
             _doorService = doorService;
             _accessService = accessService;
             _userManager = userManager;
+            _logger = logger;
         }
 
         /// <summary>
@@ -50,31 +53,39 @@ namespace AccessManagementSystem.API.Controllers
         [HttpPost("{doorId}/grant-access")]
         public async Task<IActionResult> OpenDoor(int doorId, bool hasTag)
         {
-            var currentUserName = _userManager.GetUserName(User);
-            var currentUser = await _userManager.FindByNameAsync(currentUserName);
-            if (currentUser == null)
+            try
             {
-                return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredUser));
-            }
+                var currentUserName = _userManager.GetUserName(User);
+                var currentUser = await _userManager.FindByNameAsync(currentUserName);
+                if (currentUser == null)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredUser));
+                }
 
-            var doorExists = await _doorService.DoorExists(doorId);
-            if (!doorExists)
+                var doorExists = await _doorService.DoorExists(doorId);
+                if (!doorExists)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredDoor));
+                }
+
+                bool isAccessGranted = await _accessService.CanGrantAccessAsync(currentUser.Id, doorId);
+
+                if (hasTag)
+                {
+                    await _accessService.LogTagUserDoorEventAsync(currentUser.Id, doorId, isAccessGranted);
+                }
+                else
+                {
+                    await _accessService.LogRemoteUserDoorEventAsync(currentUser.Id, doorId, isAccessGranted);
+                }
+
+                return Ok(ResponseResult.Succeeded());
+            }
+            catch (Exception ex)
             {
-                return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredDoor));
+                _logger.LogError(ex, "An error occurred in DoorAccessController.OpenDoor");
+                return StatusCode((int)HttpStatusCode.InternalServerError, ResponseResult.Failed());
             }
-
-            bool isAccessGranted = await _accessService.CanGrantAccessAsync(currentUser.Id, doorId);
-
-            if (hasTag)
-            {
-                await _accessService.LogTagUserDoorEventAsync(currentUser.Id, doorId, isAccessGranted);
-            }
-            else
-            {
-                await _accessService.LogRemoteUserDoorEventAsync(currentUser.Id, doorId, isAccessGranted);
-            }
-
-            return Ok(ResponseResult.Succeeded());
         }
     }
 }

@@ -3,6 +3,7 @@ using AccessManagementSystem.Domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace AccessManagementSystem.API.Controllers
 {
@@ -13,11 +14,13 @@ namespace AccessManagementSystem.API.Controllers
     {
         private readonly IDoorService _doorService;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ILogger<DoorsController> _logger;
 
-        public DoorsController(IDoorService doorService, RoleManager<IdentityRole> roleManager)
+        public DoorsController(IDoorService doorService, RoleManager<IdentityRole> roleManager, ILogger<DoorsController> logger)
         {
             _doorService = doorService;
             _roleManager = roleManager;
+            _logger = logger;
         }
 
         /// <summary>
@@ -52,20 +55,28 @@ namespace AccessManagementSystem.API.Controllers
         [HttpPut("{doorId}/role")]
         public async Task<IActionResult> SetDoorToRole(int doorId, SetDoorToRoleInputModel model)
         {
-            var doorExists = await _doorService.DoorExists(doorId);
-            if (!doorExists)
+            try
             {
-                return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredDoor));
-            }
+                var doorExists = await _doorService.DoorExists(doorId);
+                if (!doorExists)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredDoor));
+                }
 
-            var roleExists = await _roleManager.RoleExistsAsync(model.RoleName);
-            if (!roleExists)
+                var roleExists = await _roleManager.RoleExistsAsync(model.RoleName);
+                if (!roleExists)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredRole));
+                }
+
+                await _doorService.SetDoorRole(doorId, model.RoleName);
+                return Ok(ResponseResult.Succeeded());
+            }
+            catch (Exception ex)
             {
-                return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredRole));
+                _logger.LogError(ex, "An error occurred in DoorsController.SetDoorToRole");
+                return StatusCode((int)HttpStatusCode.InternalServerError, ResponseResult.Failed());
             }
-
-            await _doorService.SetDoorRole(doorId, model.RoleName);
-            return Ok(ResponseResult.Succeeded());
         }
     }
 }

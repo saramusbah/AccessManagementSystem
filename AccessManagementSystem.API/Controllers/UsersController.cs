@@ -18,12 +18,15 @@ namespace AccessManagementSystem.API.Controllers
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IdentityConfig _identityConfig;
+        private readonly ILogger<UsersController> _logger;
 
-        public UsersController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IdentityConfig identityConfig)
+        public UsersController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager,
+            IdentityConfig identityConfig, ILogger<UsersController> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _identityConfig = identityConfig;
+            _logger = logger;
         }
 
         /// <summary>
@@ -41,27 +44,35 @@ namespace AccessManagementSystem.API.Controllers
         [Route("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterInputModel model)
         {
-            var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser != null)
+            try
             {
-                return BadRequest(ResponseResult.Failed(ErrorCode.ExisitingAccountError));
+                var existingUser = await _userManager.FindByEmailAsync(model.Email);
+                if (existingUser != null)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.ExisitingAccountError));
+                }
+
+                var user = new User
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    TokenVersion = Guid.NewGuid().ToString()
+                };
+
+
+                var userCreated = await _userManager.CreateAsync(user, model.Password);
+                if (!userCreated.Succeeded)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.ValidationError, userCreated.Errors.Select(e => e.Code).ToArray()));
+                }
+
+                return Ok(ResponseResult.Succeeded());
             }
-
-            var user = new User
+            catch (Exception ex)
             {
-                UserName = model.Email,
-                Email = model.Email,
-                TokenVersion = Guid.NewGuid().ToString()
-            };
-
-
-            var userCreated = await _userManager.CreateAsync(user, model.Password);
-            if (!userCreated.Succeeded)
-            {
-                return BadRequest(ResponseResult.Failed(ErrorCode.ValidationError, userCreated.Errors.Select(e => e.Code).ToArray()));
+                _logger.LogError(ex, "An error occurred in UsersController.Register");
+                return StatusCode((int)HttpStatusCode.InternalServerError, ResponseResult.Failed());
             }
-
-            return Ok(ResponseResult.Succeeded());
         }
 
         /// <summary>
@@ -84,34 +95,42 @@ namespace AccessManagementSystem.API.Controllers
         [ProducesResponseType(typeof(ResponseResult<object>), 403)]
         public async Task<IActionResult> AddToRole([FromBody] AddUserToRoleInputModel model)
         {
-            var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser == null)
+            try
             {
-                return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredUser));
+                var existingUser = await _userManager.FindByEmailAsync(model.Email);
+                if (existingUser == null)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredUser));
+                }
+
+                var roleExists = await _roleManager.RoleExistsAsync(model.Role);
+
+                if (!roleExists)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredRole));
+                }
+
+                var addedToRole = await _userManager.AddToRoleAsync(existingUser, model.Role);
+                if (!addedToRole.Succeeded)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.ValidationError, addedToRole.Errors.Select(e => e.Description).ToArray()));
+                }
+
+                existingUser.TokenVersion = Guid.NewGuid().ToString();
+                var userUpdated = await _userManager.UpdateAsync(existingUser);
+
+                if (!userUpdated.Succeeded)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.ValidationError, userUpdated.Errors.Select(e => e.Description).ToArray()));
+                }
+
+                return Ok(ResponseResult.Succeeded());
             }
-
-            var roleExists = await _roleManager.RoleExistsAsync(model.Role);
-
-            if (!roleExists)
+            catch (Exception ex)
             {
-                return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredRole));
+                _logger.LogError(ex, "An error occurred in UsersController.AddToRole");
+                return StatusCode((int)HttpStatusCode.InternalServerError, ResponseResult.Failed());
             }
-
-            var addedToRole = await _userManager.AddToRoleAsync(existingUser, model.Role);
-            if (!addedToRole.Succeeded)
-            {
-                return BadRequest(ResponseResult.Failed(ErrorCode.ValidationError, addedToRole.Errors.Select(e => e.Description).ToArray()));
-            }
-
-            existingUser.TokenVersion = Guid.NewGuid().ToString();
-            var userUpdated = await _userManager.UpdateAsync(existingUser);
-
-            if (!userUpdated.Succeeded)
-            {
-                return BadRequest(ResponseResult.Failed(ErrorCode.ValidationError, userUpdated.Errors.Select(e => e.Description).ToArray()));
-            }
-
-            return Ok(ResponseResult.Succeeded());
         }
 
         /// <summary>
@@ -127,23 +146,31 @@ namespace AccessManagementSystem.API.Controllers
         [ProducesResponseType(typeof(ResponseResult<object>), 401)]
         public async Task<IActionResult> Login([FromBody] LoginInputModel model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
+            try
             {
-                return StatusCode((int)HttpStatusCode.Unauthorized, ResponseResult.Failed(ErrorCode.InvalidLoginError));
-            }
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                {
+                    return StatusCode((int)HttpStatusCode.Unauthorized, ResponseResult.Failed(ErrorCode.InvalidLoginError));
+                }
 
-            if (!await _userManager.CheckPasswordAsync(user, model.Password))
+                if (!await _userManager.CheckPasswordAsync(user, model.Password))
+                {
+                    return StatusCode((int)HttpStatusCode.Unauthorized, ResponseResult.Failed(ErrorCode.InvalidLoginError));
+                }
+
+                var roles = await _userManager.GetRolesAsync(user);
+                var token = GenerateJwtToken(model.Email, user, roles);
+
+                return Ok(ResponseResult.SucceededWithData(
+                        LoginOutputModel.
+                        CreateForLogin(token, user.Email)));
+            }
+            catch (Exception ex)
             {
-                return StatusCode((int)HttpStatusCode.Unauthorized, ResponseResult.Failed(ErrorCode.InvalidLoginError));
+                _logger.LogError(ex, "An error occurred in UsersController.Login");
+                return StatusCode((int)HttpStatusCode.InternalServerError, ResponseResult.Failed());
             }
-
-            var roles = await _userManager.GetRolesAsync(user);
-            var token = GenerateJwtToken(model.Email, user, roles);
-
-            return Ok(ResponseResult.SucceededWithData(
-                    LoginOutputModel.
-                    CreateForLogin(token, user.Email)));
         }
 
 

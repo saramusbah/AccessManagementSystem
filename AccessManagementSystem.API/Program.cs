@@ -4,12 +4,14 @@ using AccessManagementSystem.Data.Services;
 using AccessManagementSystem.Domain.Contracts;
 using AccessManagementSystem.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 
@@ -115,6 +117,26 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(config =>
     {
         config.SwaggerEndpoint("../swagger/v1/swagger.json", "AccessManagementSystem API v1");
+    });
+}
+else
+{
+    app.UseExceptionHandler(errorApp =>
+    {
+        errorApp.Run(async context =>
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            context.Response.ContentType = "text/plain";
+
+            var exceptionHandler = context.Features.Get<IExceptionHandlerFeature>();
+            if (exceptionHandler != null)
+            {
+                ILogger logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogError($"Unhandled exception: {exceptionHandler.Error}");
+
+                await context.Response.WriteAsync("Internal Server Error. Please try again later.");
+            }
+        });
     });
 }
 
