@@ -8,7 +8,7 @@ namespace AccessManagementSystem.API.Controllers
 {
     [ApiController]
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/doors")]
     public class DoorsController : ControllerBase
     {
         private readonly IDoorService _doorService;

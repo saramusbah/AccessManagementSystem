@@ -24,12 +24,12 @@ namespace AccessManagementSystem.Data.Services
 
         public async Task<bool> DoorExists(int id)
         {
-            return await _dbContext.Doors.SingleOrDefaultAsync(d => d.Id == id) != null;
+            return await _dbContext.Doors.AsNoTracking().SingleOrDefaultAsync(d => d.Id == id) != null;
         }
 
         public async Task<IEnumerable<DoorOutputModel>> GetDoors()
         {
-            return await _dbContext.Doors.Select(d => DoorOutputModel.Create(d.Id, d.Name)).ToListAsync();
+            return await _dbContext.Doors.AsNoTracking().Select(d => DoorOutputModel.Create(d.Id, d.Name)).ToListAsync();
         }
 
         public async Task SetDoorRole(int doorId, string roleName)

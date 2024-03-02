@@ -12,14 +12,14 @@
 
         public AccessMethod AccessMethod { get; set; }
 
-        public static UserDoorEvent Create(string userId, int doorId, bool isSuccess, DateTime accessTime, AccessMethod accessMethod)
+        public static UserDoorEvent Create(User user, Door door, bool isSuccess, AccessMethod accessMethod)
         {
             return new UserDoorEvent
             {
-                User = new User { Id = userId },
-                Door = new Door { Id = doorId },
+                User = user,
+                Door = door,
                 IsSuccess = isSuccess,
-                AccessTime = accessTime,
+                AccessTime = DateTime.UtcNow,
                 AccessMethod = accessMethod,
             };
         }

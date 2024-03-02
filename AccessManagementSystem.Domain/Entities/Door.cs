@@ -6,7 +6,7 @@
 
         public string Name { get; set; }
 
-        public ICollection<UserDoorEvent> UserAccessList { get; set; } = new HashSet<UserDoorEvent>();
+        public ICollection<UserDoorEvent> UserDoorEvents { get; set; } = new HashSet<UserDoorEvent>();
 
         public ICollection<DoorRole> DoorRoles { get; set; } = new HashSet<DoorRole>();
     }

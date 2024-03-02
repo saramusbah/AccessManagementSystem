@@ -18,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddScoped<IDoorService, DoorService>();
+builder.Services.AddScoped<IAccessService, AccessService>();
 
 builder.Services.Configure<IdentityConfig>(builder.Configuration.GetSection("IdentitySettings"));
 builder.Services.AddSingleton(provider => provider.GetRequiredService<IOptions<IdentityConfig>>().Value);
@@ -38,17 +39,17 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        new string[] { }
-                    }
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
     });
 });
 

@@ -5,6 +5,6 @@ namespace AccessManagementSystem.Domain.Models
     public class SetDoorToRoleInputModel
     {
         [Required]
-        public string RoleName {  get; set; }
+        public string RoleName { get; set; }
     }
 }

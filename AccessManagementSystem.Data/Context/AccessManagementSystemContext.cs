@@ -26,7 +26,7 @@ namespace AccessManagementSystem.Data.Context
 
             modelBuilder.Entity<UserDoorEvent>()
                 .HasOne(uda => uda.Door)
-                .WithMany(d => d.UserAccessList)
+                .WithMany(d => d.UserDoorEvents)
                 .HasForeignKey("DoorId");
 
 

@@ -5,7 +5,7 @@ namespace AccessManagementSystem.Domain.Contracts
     public interface IDoorService
     {
         Task<IEnumerable<DoorOutputModel>> GetDoors();
-        
+
         Task<bool> DoorExists(int id);
 
         Task CreateDoor(CreateDoorInputModel model);
