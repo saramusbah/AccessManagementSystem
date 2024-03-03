@@ -10,6 +10,7 @@ namespace AccessManagementSystem.Domain.Models
         NotRegisteredUser,
         NotRegisteredRole,
         NotRegisteredDoor,
-        NoAccess
+        NoAccess,
+        AlreadyRegistered
     }
 }

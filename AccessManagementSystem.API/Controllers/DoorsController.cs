@@ -69,6 +69,12 @@ namespace AccessManagementSystem.API.Controllers
                     return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredRole));
                 }
 
+                var doorRoleExists = await _doorService.DoorRoleExists(doorId, model.RoleName);
+                if (doorRoleExists)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.AlreadyRegistered));
+                }
+
                 await _doorService.SetDoorRole(doorId, model.RoleName);
                 return Ok(ResponseResult.Succeeded());
             }

@@ -39,5 +39,12 @@ namespace AccessManagementSystem.Data.Services
             door.DoorRoles.Add(new DoorRole { Door = door, Role = role });
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<bool> DoorRoleExists(int doorId, string roleName)
+        {
+            var door = await _dbContext.Doors.AsNoTracking().Include(d => d.DoorRoles).ThenInclude(dr=>dr.Role).SingleAsync(d => d.Id == doorId);
+            var role = await _dbContext.Roles.AsNoTracking().SingleAsync(r => r.Name == roleName);
+            return door.DoorRoles.Any(de => de.Door.Id == doorId && de.Role.Id == role.Id);
+        }
     }
 }

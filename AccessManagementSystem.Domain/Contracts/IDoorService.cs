@@ -11,5 +11,7 @@ namespace AccessManagementSystem.Domain.Contracts
         Task CreateDoor(CreateDoorInputModel model);
 
         Task SetDoorRole(int doorId, string roleName);
+
+        Task<bool> DoorRoleExists(int doorId, string roleName);
     }
 }
