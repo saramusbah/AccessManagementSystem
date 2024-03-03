@@ -19,6 +19,7 @@ namespace AccessManagementSystem.Data.Services
         {
             var door = await _dbContext.Doors.AsNoTracking().Include(d => d.DoorRoles).ThenInclude(dr => dr.Role).AsNoTracking().SingleAsync(d => d.Id == doorId);
             var roles = await _dbContext.UserRoles.AsNoTracking().Where(r => r.UserId == userId).ToListAsync();
+
             return door.DoorRoles.Any(dr => roles.Any(ur => ur.RoleId == dr.Role.Id));
         }
 

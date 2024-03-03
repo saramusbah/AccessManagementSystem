@@ -25,14 +25,12 @@ namespace AccessManagementSystem.API.Controllers
         /// Get user's access history.
         /// </summary>
         /// <returns>A <see cref="ResponseResult"/> containing a collection of <see cref="AccessHistoryOutputModel"/></returns>
-        [Authorize()]
         [Authorize(Roles = "Admin")]
         [HttpGet]
         [ProducesResponseType(typeof(ResponseResult<AccessHistoryOutputModel[]>), 200)]
-        public async Task<IActionResult> GetUserAccessHistoryAsync()
+        public async Task<IActionResult> GetUserAccessHistoryAsync([FromQuery] string userName)
         {
-            var currentUserName = _userManager.GetUserName(User);
-            var currentUser = await _userManager.FindByNameAsync(currentUserName);
+            var currentUser = await _userManager.FindByNameAsync(userName);
             if (currentUser == null)
             {
                 return BadRequest(ResponseResult.Failed(ErrorCode.NotRegisteredUser));
