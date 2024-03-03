@@ -69,6 +69,10 @@ namespace AccessManagementSystem.API.Controllers
                 }
 
                 bool isAccessGranted = await _accessService.CanGrantAccessAsync(currentUser.Id, doorId);
+                if (!isAccessGranted)
+                {
+                    return BadRequest(ResponseResult.Failed(ErrorCode.NoAccess));
+                }
 
                 if (hasTag)
                 {

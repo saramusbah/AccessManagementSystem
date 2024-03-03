@@ -77,6 +77,9 @@ namespace AccessManagementSystem.Domain.Models
 
                 case Models.ErrorCode.NotRegisteredDoor:
                     return "This door is not registered";
+               
+                case Models.ErrorCode.NoAccess:
+                                return "No Access";
 
                 default:
                     throw new NotImplementedException();

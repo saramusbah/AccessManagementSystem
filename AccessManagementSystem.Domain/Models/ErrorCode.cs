@@ -9,6 +9,7 @@ namespace AccessManagementSystem.Domain.Models
         RequiredEmailError,
         NotRegisteredUser,
         NotRegisteredRole,
-        NotRegisteredDoor
+        NotRegisteredDoor,
+        NoAccess
     }
 }
