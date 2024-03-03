@@ -53,7 +53,7 @@ namespace AccessManagementSystem.Data.Services
         {
             var door = await _dbContext.Doors.SingleAsync(d => d.Id == doorId);
             var user = await _dbContext.Users.SingleAsync(r => r.Id == userId);
-            door.UserDoorEvents.Add(UserDoorEvent.Create(user, door, isSuccessful, AccessMethod.Tag));
+            door.UserDoorEvents.Add(UserDoorEvent.Create(user, door, isSuccessful, AccessMethod.Remote));
             await _dbContext.SaveChangesAsync();
         }
 
